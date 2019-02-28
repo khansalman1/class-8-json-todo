@@ -23,6 +23,9 @@ def create_task(tasks, name, description=None, due_on=None):
 
 
 def list_tasks(tasks, status='all'):
+    if status not in ('done', 'all', 'pending'):
+        raise InvalidTaskStatus()
+        
     task_list = []
     for idx, task in enumerate(tasks, 1):
         if task['due_on'] is not None:
@@ -33,18 +36,26 @@ def list_tasks(tasks, status='all'):
         t = (idx, task['task'], due_on, task['status'])
         if status == 'all' or task['status'] == status:
             task_list.append(t)
-
+    
     return task_list
 
 
 def complete_task(tasks, name):
     new_tasks = []
+    found = False
+    id_name = parse_int(name)
 
-    for task in tasks:
-        if name == task['task']:
+    for idx, task in enumerate(tasks, start=1):
+        if name == task['task'] or idx == id_name:
+            found = True
+            if task['status'] == 'done':
+                raise TaskAlreadyDoneException()
             task = task.copy()
             task['status'] = 'done'
         new_tasks.append(task)
+        
+    if not found:
+        raise TaskDoesntExistException()
 
     return new_tasks
 
